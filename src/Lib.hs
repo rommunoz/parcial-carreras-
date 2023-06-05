@@ -6,8 +6,8 @@ module Lib () where
 
 data Auto = Auto {
     color :: Color,
-    velocidad :: Int
-    distancia :: Int,
+    velocidad :: Int,
+    distancia :: Int
 } deriving (Eq)
 
 type Carrera = [Auto]
@@ -16,22 +16,22 @@ data Color = Negro | Rojo | Azul | Blanco deriving (Eq)
 
 estaCercaDe :: Auto -> Auto -> Bool
 estaCercaDe unAuto otroAuto = 
-    (not . sonIguales unAuto) otroAuto && ((< 10) . abs . substract (distancia unAuto ))(distancia otroAuto)
+    (not . sonIguales unAuto) otroAuto && ((< 10) . abs . subtract (distancia unAuto))(distancia otroAuto)
 
 sonIguales :: Auto -> Auto -> Bool
 sonIguales unAuto otroAuto = color unAuto == color otroAuto
 
 vaTranquilo :: Auto -> Carrera -> Bool
-vaTranquilo unAuto unaCarrera = all (not . estaCercaDe $ unAuto) unaCarrera && lesVaGanandoATodos unAuto unaCarrera
+vaTranquilo unAuto unaCarrera = all (not . estaCercaDe unAuto) unaCarrera && lesVaGanandoATodos unAuto unaCarrera
 
 lesVaGanandoATodos :: Auto -> Carrera -> Bool
-lesVaGanandoATodos unAuto unaCarrera = all (leVaGanando unAuto) unaCarrera
+lesVaGanandoATodos unAuto  = all (leVaGanando unAuto) 
 
 puestoDeUnAuto :: Auto -> Carrera -> Int
-puestoDeUnAuto unAuto unaCarrera = (+1) . count (flip leVaGanando unAuto) $ unaCarrera
+puestoDeUnAuto unAuto unaCarrera = (+1) . length . filter (not . leVaGanando unAuto) $ unaCarrera -- usé count = (length . filter condicion)
 
 leVaGanando :: Auto -> Auto -> Bool
-leVaGanando unAuto = (< (distancia unAuto)) . distancia
+leVaGanando unAuto = (< distancia unAuto) . distancia
 
 -------------
 -- Punto 2 --
@@ -44,16 +44,21 @@ mapVelocidad :: (Int -> Int) -> Auto -> Auto
 mapVelocidad accion unAuto = unAuto { velocidad = accion . velocidad $ unAuto }     
 
 bajarLaVelocidad :: Int -> Auto -> Auto
-bajarLaVelocidad unaVelocidad unAuto = mapVelocidad (restarVelocidad unaVelocidad)
+bajarLaVelocidad unaVelocidad = mapVelocidad (restarVelocidad unaVelocidad)
 
-restarVelocidad :: Int -> Int
+restarVelocidad :: Int -> Int -> Int
 restarVelocidad unaVelocidad otraVelocidad 
-    | substract unaVelocidad otraVelocidad < 0 = 0
-    | otherwise                                = substract unaVelocidad otraVelocidad   
+    | subtract unaVelocidad otraVelocidad < 0 = 0
+    | otherwise                               = subtract unaVelocidad otraVelocidad   
 
 -------------
 -- Punto 3 --
 -------------
+
+afectarALosQueCumplen :: (a -> Bool) -> (a -> a) -> [a] -> [a]
+afectarALosQueCumplen criterio efecto lista
+  = (map efecto . filter criterio) lista ++ filter (not.criterio) lista
+
 
 type PowerUp = (Carrera -> Carrera)
 
@@ -65,7 +70,7 @@ miguelitos unaVelocidad unAuto = afectarALosQueCumplen (leVaGanando unAuto) (baj
 
 jetPack :: Int -> Auto -> PowerUp
 jetPack unTiempo unAuto = 
-    afectarALosQueCumplen (sonIguales unAuto) (mapVelocidad (const velocidad unAuto) . queCorra unTiempo . mapVelocidad (*2))
+    afectarALosQueCumplen (sonIguales unAuto) (mapVelocidad (const (velocidad unAuto)) . queCorra unTiempo . mapVelocidad (*2))
 
 {- misilTeledirigido :: Auto -> Color -> PowerUp
 misilTeledirigido unAuto colorDeUnaVictima = 
@@ -84,19 +89,19 @@ simularCarrera unaCarrera unosEventos =
 correnTodos :: Int -> Evento
 correnTodos unTiempo = map (queCorra unTiempo)
 
-usaPowerUp :: Color -> PowerUp -> Evento 
-usaPowerUp unColor unPowerUp = afectarALosQueCumplen ((==) unColor . color) (unPowerUp) 
+usaPowerUp :: Color -> PowerUp
+usaPowerUp unColor unPowerUp = unPowerUp unColor . filter ((==) unColor . color)
 
 carrera :: Carrera
 carrera = [Auto Blanco 120 0, Auto Azul 120 0, Auto Negro 120 0, Auto Rojo 120 0]
 
 serieDeEventos :: [Evento]
 serieDeEventos = [correnTodos 30, 
-        usaPowerUp Azul (jetPack 3), 
+        usaPowerUp Azul jetPack 3, 
         usaPowerUp Blanco terremoto, 
         correnTodos 40,
-        usaPowerUp Blanco (miguelitos 20),
-        usaPowerUp Negro (jetPack 6),
+        usaPowerUp Blanco miguelitos 20,
+        usaPowerUp Negro jetPack 6,
         correnTodos 10]
 
 carreraPedida :: [Puesto]
