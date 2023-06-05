@@ -34,3 +34,18 @@ leVaGanando unAuto = (< (distancia unAuto)) . distancia
 -------------
 -- Punto 2 --
 -------------
+
+queCorra :: Int -> Auto -> Auto
+queCorra unTiempo unAuto = unAuto { distancia = (+) (velocidad unAuto * unTiempo) . distancia $ unAuto } 
+
+mapVelocidad :: (Int -> Int) -> Auto -> Auto
+mapVelocidad accion unAuto = unAuto { velocidad = accion . velocidad $ unAuto }     
+
+bajarLaVelocidad :: Int -> Auto -> Auto
+bajarLaVelocidad unaVelocidad unAuto = mapVelocidad (restarVelocidad unaVelocidad)
+
+restarVelocidad :: Int -> Int
+restarVelocidad unaVelocidad otraVelocidad 
+    | substract unaVelocidad otraVelocidad < 0 = 0
+    | otherwise                                = substract unaVelocidad otraVelocidad   
+
