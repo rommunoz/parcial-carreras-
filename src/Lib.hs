@@ -49,3 +49,19 @@ restarVelocidad unaVelocidad otraVelocidad
     | substract unaVelocidad otraVelocidad < 0 = 0
     | otherwise                                = substract unaVelocidad otraVelocidad   
 
+-------------
+-- Punto 3 --
+-------------
+
+type PowerUp = (Auto -> Carrera -> Carrera)
+
+terremoto :: PowerUp
+terremoto unAuto = afectarALosQueCumplen (estaCercaDe unAuto) (bajarLaVelocidad 50)
+
+miguelitos :: Int -> PowerUp
+miguelitos unaVelocidad unAuto = afectarALosQueCumplen (leVaGanando unAuto) (bajarLaVelocidad unaVelocidad)
+
+jetPack :: Int -> PowerUp
+jetPack unTiempo unAuto = 
+    afectarALosQueCumplen ((==) color unAuto) (mapVelocidad (const velocidad unAuto) . queCorra unTiempo . mapVelocidad (*2))
+
