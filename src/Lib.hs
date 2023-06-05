@@ -5,12 +5,14 @@ module Lib () where
 -------------
 
 data Auto = Auto {
-    color :: String,
+    color :: Color,
     velocidad :: Int
     distancia :: Int,
-}
+} deriving (Eq)
 
 type Carrera = [Auto]
+
+data Color = Negro | Rojo | Azul | Blanco deriving (Eq)
 
 estaCercaDe :: Auto -> Auto -> Bool
 estaCercaDe unAuto otroAuto = 
@@ -53,7 +55,7 @@ restarVelocidad unaVelocidad otraVelocidad
 -- Punto 3 --
 -------------
 
-type PowerUp = (Auto -> Carrera -> Carrera)
+type PowerUp = (Carrera -> Carrera)
 
 terremoto :: PowerUp
 terremoto unAuto = afectarALosQueCumplen (estaCercaDe unAuto) (bajarLaVelocidad 50)
@@ -65,3 +67,40 @@ jetPack :: Int -> PowerUp
 jetPack unTiempo unAuto = 
     afectarALosQueCumplen ((==) color unAuto) (mapVelocidad (const velocidad unAuto) . queCorra unTiempo . mapVelocidad (*2))
 
+-------------
+-- Punto 4 --
+-------------
+type Evento = (Carrera -> Carrera)
+type Puesto = (Int, Color)
+
+simularCarrera :: Carrera -> [Evento] -> [Puesto]
+simularCarrera unaCarrera unosEventos = 
+    zipWith (\unAuto numero -> (numero, color unAuto)) (foldl (flip($)) unaCarrera unosEventos) [1..length unaCarrera]
+-- considerando que el auto cabeza de la lista sería el primero
+
+correnTodos :: Int -> Evento
+correnTodos unTiempo = map (queCorra unTiempo)
+
+usaPowerUp :: Auto -> PowerUp -> Evento 
+usaPowerUp unAuto unPowerUp = afectarALosQueCumplen (== (color unAuto)) (unPowerUp) 
+
+carrera :: Carrera
+carrera = [Auto Blanco 120 0, Auto Azul 120 0, Auto Negro 120 0, Auto Rojo 120 0]
+
+serieDeEventos :: [Evento]
+serieDeEventos = [correnTodos 30, 
+        usaPowerUp Azul jetPack 3, 
+        usaPowerUp Blanco terremoto, 
+        correnTodos 40,
+        usaPowerUp Blanco miguelitos 20,
+        usaPowerUp Negro jetPack 6,
+        correnTodos 10]
+
+carreraPedida :: [Puesto]
+carreraPedida = simularCarrera carrera serieDeEventos
+
+-------------
+-- Punto 5 --
+-------------
+
+-- 
