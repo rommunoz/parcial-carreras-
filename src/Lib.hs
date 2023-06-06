@@ -14,7 +14,7 @@ data Auto = Auto {
 
 type Carrera = [Auto]
 
-data Color = Negro | Rojo | Azul | Blanco deriving (Eq)
+data Color = Negro | Rojo | Azul | Blanco deriving (Eq, Show)
 
 estaCercaDe :: Auto -> Auto -> Bool
 estaCercaDe unAuto otroAuto = 
@@ -35,7 +35,7 @@ puestoDeUnAuto :: Auto -> Carrera -> Int
 puestoDeUnAuto unAuto  = (+1) . length . filter (not . leVaGanando unAuto) -- usé count = (length . filter condicion)
 
 leVaGanando :: Auto -> Auto -> Bool
-leVaGanando unAuto = (< distancia unAuto) . distancia
+leVaGanando unAuto otroAuto = distancia otroAuto <= distancia unAuto
 
 -------------
 -- Punto 2 --
