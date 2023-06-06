@@ -32,7 +32,7 @@ conjuncionDeCondiciones unAuto otroAuto= (not . estaCercaDe unAuto) otroAuto && 
 lesVaGanandoATodos unAuto  = all (leVaGanando unAuto) -} 
 
 puestoDeUnAuto :: Auto -> Carrera -> Int
-puestoDeUnAuto unAuto  = (+1) . length . filter (not . leVaGanando unAuto) -- usé count = (length . filter condicion)
+puestoDeUnAuto unAuto  = (+1) . length . filter (not . leVaGanando unAuto) 
 
 leVaGanando :: Auto -> Auto -> Bool
 leVaGanando unAuto otroAuto = distancia otroAuto <= distancia unAuto
