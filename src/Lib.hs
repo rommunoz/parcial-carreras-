@@ -1,4 +1,6 @@
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 module Lib () where
+
 
 -------------
 -- Punto 1 --
@@ -22,13 +24,15 @@ sonIguales :: Auto -> Auto -> Bool
 sonIguales unAuto otroAuto = color unAuto == color otroAuto
 
 vaTranquilo :: Auto -> Carrera -> Bool
-vaTranquilo unAuto unaCarrera = all (not . estaCercaDe unAuto) unaCarrera && lesVaGanandoATodos unAuto unaCarrera
+vaTranquilo unAuto = all (conjuncionDeCondiciones unAuto) 
 
-lesVaGanandoATodos :: Auto -> Carrera -> Bool
-lesVaGanandoATodos unAuto  = all (leVaGanando unAuto) 
+conjuncionDeCondiciones :: Auto -> Auto -> Bool
+conjuncionDeCondiciones unAuto otroAuto= (not . estaCercaDe unAuto) otroAuto &&  leVaGanando unAuto otroAuto
+{- lesVaGanandoATodos :: Auto -> Carrera -> Bool
+lesVaGanandoATodos unAuto  = all (leVaGanando unAuto) -} 
 
 puestoDeUnAuto :: Auto -> Carrera -> Int
-puestoDeUnAuto unAuto unaCarrera = (+1) . length . filter (not . leVaGanando unAuto) $ unaCarrera -- usé count = (length . filter condicion)
+puestoDeUnAuto unAuto  = (+1) . length . filter (not . leVaGanando unAuto) -- usé count = (length . filter condicion)
 
 leVaGanando :: Auto -> Auto -> Bool
 leVaGanando unAuto = (< distancia unAuto) . distancia
@@ -44,12 +48,12 @@ mapVelocidad :: (Int -> Int) -> Auto -> Auto
 mapVelocidad accion unAuto = unAuto { velocidad = accion . velocidad $ unAuto }     
 
 bajarLaVelocidad :: Int -> Auto -> Auto
-bajarLaVelocidad unaVelocidad = mapVelocidad (restarVelocidad unaVelocidad)
+bajarLaVelocidad unaVelocidad = mapVelocidad (max 0 . subtract unaVelocidad)
 
-restarVelocidad :: Int -> Int -> Int
+{- restarVelocidad :: Int -> Int -> Int
 restarVelocidad unaVelocidad otraVelocidad 
     | subtract unaVelocidad otraVelocidad < 0 = 0
-    | otherwise                               = subtract unaVelocidad otraVelocidad   
+    | otherwise                               = subtract unaVelocidad otraVelocidad  -}  
 
 -------------
 -- Punto 3 --
@@ -83,25 +87,31 @@ type Puesto = (Int, Color)
 
 simularCarrera :: Carrera -> [Evento] -> [Puesto]
 simularCarrera unaCarrera unosEventos = 
-    zipWith (\unAuto numero -> (numero, color unAuto)) (foldl (flip($)) unaCarrera unosEventos) [1..length unaCarrera]
--- considerando que el auto cabeza de la lista sería el primero
+    armarPuestos (foldl (flip($)) unaCarrera unosEventos) 
+
+armarPuestos :: Carrera -> [Puesto]
+armarPuestos unaCarrera = map (\unAuto -> (puestoDeUnAuto unAuto unaCarrera, color unAuto)) unaCarrera
 
 correnTodos :: Int -> Evento
 correnTodos unTiempo = map (queCorra unTiempo)
 
-usaPowerUp :: Color -> PowerUp
-usaPowerUp unColor unPowerUp = unPowerUp unColor . filter ((==) unColor . color)
+usaPowerUp :: Color -> (Auto -> PowerUp) -> Evento
+usaPowerUp unColor unPowerUp unaCarrera = unPowerUp (autoActual unColor unaCarrera) unaCarrera
+-- Color -> (Auto -> Evento) -> Carrera -> Carrera
+--usaPowerUp unColor unPowerUp unaCarrera = unPowerUp . filter ((==) unColor . color) $ unaCarrera
+autoActual :: Color -> [Auto] -> Auto
+autoActual unColor = head . filter ((==) unColor . color) 
 
 carrera :: Carrera
 carrera = [Auto Blanco 120 0, Auto Azul 120 0, Auto Negro 120 0, Auto Rojo 120 0]
 
 serieDeEventos :: [Evento]
 serieDeEventos = [correnTodos 30, 
-        usaPowerUp Azul jetPack 3, 
+        usaPowerUp Azul (jetPack 3), 
         usaPowerUp Blanco terremoto, 
         correnTodos 40,
-        usaPowerUp Blanco miguelitos 20,
-        usaPowerUp Negro jetPack 6,
+        usaPowerUp Blanco (miguelitos 20),
+        usaPowerUp Negro (jetPack 6),
         correnTodos 10]
 
 carreraPedida :: [Puesto]
